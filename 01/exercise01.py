@@ -15,14 +15,19 @@ class BinaryTreeNode:
 
   def insert(self, key, value):
     if key < self.key:
-      self.left_child = BinaryTreeNode(key, value) if self.left_child is None else self.left_child.insert(key, value)
-      return self.left_child
+      if self.left_child is None:
+        self.left_child = BinaryTreeNode(key, value)
+      else:
+        self.left_child.insert(key, value)
 
     if key > self.key:
-      self.right_child = BinaryTreeNode(key, value) if self.right_child is None else self.right_child.insert(key, value)
-      return self.right_child
-
-    self.value = value
+      if self.right_child is None:
+        self.right_child = BinaryTreeNode(key, value)
+      else:
+        self.right_child.insert(key, value)
+    
+    if key == self.key:
+      self.value = value
 
     return self
 
@@ -59,13 +64,17 @@ class BinaryTreeNode:
   def __iter__(self):
     return self.traverse()
 
+  def successor(self):
+    successor = self.right_child
+    if successor is not None:
+      while successor.left_child is not None:
+        successor = successor.left_child
+
+    return successor
 
 class BinaryTree:
   def __init__(self):
     self.root = None
-
-  def __iter__(self):
-    return () if self.root is None else self.root
 
   def search(self, key):
     return None if self.root is None else self.root.search(key)
@@ -79,29 +88,59 @@ class BinaryTree:
   def delete(self, key):
     self.root = None if self.root is None else self.root.delete(key)
 
+  def traverse(self):
+    if self.root is not None:
+      for node in self.root:
+        yield node
+
+  def __iter__(self):
+    return self.traverse()
+
   def sorted_keys(self):
     for node in self:
       yield node.key
 
-numbers = (
-  ('um', 1),
-  ('dois', 2),
-  ('tres', 3),
-  ('quatro', 4),
-  ('cinco', 5),
-  ('seis', 6),
-  ('sete', 7),
-  ('oito', 8),
-  ('nove', 9),
-  ('dez', 10),
-)
+### Tests
+if __name__ == '__main__':
+  # Insertion
+  numbers = (
+    (4, 'four'),
+    (7, 'seven'),
+    (6, 'six'),
+    (5, 'five'),
+    (10, 'ten'),
+    (1, 'one'),
+    (9, 'nine'),
+    (8, 'eight'),
+    (3, 'three'),
+    (2, 'two'),
+  )
 
+  tree = BinaryTree()
+  for (key, value) in numbers:
+    tree.insert(key, value)
 
+  # Search
+  assert tree.search(3) == 'three', 'Search should return correct value if key exists'
+  assert tree.search(11) is None, 'Search should return None if key doesn\'t exist'
 
+  # Replace value
+  assert tree.search(6) == 'six'
+  tree.insert(6, 'half dozen')
+  assert tree.search(6) == 'half dozen', 'Insert should replace value if key already exists'
 
+  # Find node successor
+  assert tree.root.key == 4
+  assert tree.root.successor().key == 5, 'Successor should find the following key'
 
+  lonely_node = BinaryTreeNode(12, 'twelve')
+  assert lonely_node.successor() == None, 'Successor should return None if node has no successor'
 
+  # Deletion
+  tree.delete(3)
+  assert tree.search(3) == None, 'Delete should remove existing key'
 
+  # Print sorted keys
+  assert list(tree.sorted_keys()) == [1, 2, 4, 5, 6, 7, 8, 9, 10], 'Should return all keys in sorted order'
 
-
-
+  print('All assertions succeeded')
