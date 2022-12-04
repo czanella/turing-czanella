@@ -176,6 +176,9 @@ class HTMLParser:
     Returns: A tuple containing a new Node object, containing the tag's name
     and attributes, if there was a valid opening tag at the current cursor position,
     or None otherwise.
+    If it's a self-closing tag (e.g.: <img src="image.gif"/>), then the returned
+    Node's children attribute is None; otherwise, it's an empty list that will hold
+    the node's children.
     If no opening tag could be consumed, the cursor position remains unchanged.
     '''
     if not self.try_consume_token('<'):
@@ -193,10 +196,15 @@ class HTMLParser:
       attributes[name] = value
       attribute = self.try_consume_attribute()
 
+    if self.try_consume_token('/'):
+      children = None
+    else:
+      children = []
+
     if not self.try_consume_token('>'):
       raise ParsingException('> expected', self)
 
-    return Node(tagName=tag_name, attributeMap=attributes)
+    return Node(tagName=tag_name, attributeMap=attributes, children=children)
 
   def try_consume_close_tag(self):
     '''Tries to consume a closing HTML tag.
@@ -249,29 +257,49 @@ class HTMLParser:
     if node is None:
       return None
 
-    node.children = []
-    while True:
-      close_tag = self.try_consume_close_tag()
-      if close_tag != None:
-        if close_tag != node.tagName:
-          raise ParsingException('Wrong closing tag: {} - expected {}'.format(close_tag, node.tagName), self)
-        else:
-          break
+    # If the parsed tag is not a self-closing tag, we must consume its children
+    if node.children == []:
+      while True:
+        close_tag = self.try_consume_close_tag()
+        if close_tag != None:
+          if close_tag != node.tagName:
+            raise ParsingException('Wrong closing tag: {} - expected {}'.format(close_tag, node.tagName), self)
+          else:
+            break
 
-      child_node = self.try_consume_node()
-      if child_node is not None:
-        node.children.append(child_node)
+        child_node = self.try_consume_node()
+        if child_node is not None:
+          node.children.append(child_node)
 
-      child_text = self.consume_text_node()
-      if child_text is not None:
-        node.children.append(child_text)
+        child_text = self.consume_text_node()
+        if child_text is not None:
+          node.children.append(child_text)
 
-      if child_text is None and child_node is None:
-        raise ParsingException('Expected closing tag for {}'.format(node.tagName), self)
+        if child_text is None and child_node is None:
+          raise ParsingException('Expected closing tag for {}'.format(node.tagName), self)
 
-    for child in node.children:
-      child.parent = node
+      for child in node.children:
+        child.parent = node
 
     return node
 
-parser = HTMLParser('<span>Hey <p font="helvetica">bro</p>! What\'s up?</span>')
+  def parse(self):
+    '''Resets the cursor position and parses the document.
+
+    Returns: a list containing all the top-level HTML nodes that could be parsed.
+    '''
+    self.cursor = 0
+    nodes = []
+    while not self.ended():
+      child_text = self.consume_text_node()
+      if child_text is not None:
+        nodes.append(child_text)
+
+      child_node = self.try_consume_node()
+      if child_node is not None:
+        nodes.append(child_node)
+
+    return nodes
+
+parser = HTMLParser('<img src=\'photo.jpg\' /><span>Hey <p font="helvetica">bro</p>! What\'s up? <img src="hey.gif"/> </span> End of document! ')
+nodes = parser.parse()
