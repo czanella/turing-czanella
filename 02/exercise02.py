@@ -139,19 +139,19 @@ class HTMLParser:
 
     return Node(tagName=tag_name, attributeMap=attributes)
 
-  def try_consume_close_tag(self, tag_name):
+  def try_consume_close_tag(self):
     checkpoint = self.cursor
     result = self.try_consume_token('<') and \
       self.try_consume_token('/') and \
-      self.try_consume_token(tag_name) and \
+      ((name := self.try_consume_name()) != None) and \
       self.try_consume_token('>')
 
     if not result:
       self.cursor = checkpoint
-    return result
+      return None
+    return name
 
   def consume_text_node(self):
-    self.skip_whites()
     if self.ended():
       return None
 
@@ -161,36 +161,40 @@ class HTMLParser:
       return None
 
     self.cursor = end
-    return Node(text=self.doc[start:end].strip())
+    return Node(text=self.doc[start:end])
 
   def try_consume_node(self):
-    print('Will try to consume node on {}'.format(self.cursor))
     node = self.try_consume_open_tag()
     if node is None:
       return None
 
     node.children = []
     while True:
-      # CONTINUAR DAQUI - começar tentando consumir close_tag
-      child_text = self.consume_text_node()
-      if child_text is not None:
-        node.children.append(child_text)
-        print('Consumed text node: |{}|'.format(child_text.text))
+      close_tag = self.try_consume_close_tag()
+      if close_tag != None:
+        if close_tag != node.tagName:
+          raise ParsingException('Wrong closing tag: {} - expected {}'.format(close_tag, node.tagName), self)
+        else:
+          break
 
       child_node = self.try_consume_node()
       if child_node is not None:
         node.children.append(child_node)
-        print('Consumed regular node: |{}|'.format(child_node.tagName))
+
+      child_text = self.consume_text_node()
+      if child_text is not None:
+        node.children.append(child_text)
 
       if child_text is None and child_node is None:
-        if self.try_consume_close_tag(node.tagName):
-          break
-        else:
-          raise ParsingException('Expected closing tag for {}'.format(node.tagName), self)
+        raise ParsingException('Expected closing tag for {}'.format(node.tagName), self)
 
     for child in node.children:
       child.parent = node
 
     return node
 
-parser = HTMLParser('<span>Hey <p font="helvetica">bro</p>! What\'s up?</span>')
+# parser = HTMLParser('<span>Hey <p font="helvetica">bro</p>! What\'s up?</span>')
+parser = HTMLParser('<p font-family="  helvetica   ">   </p>')
+node = parser.try_consume_node()
+print(node.tagName)
+print(node.attributeMap)
