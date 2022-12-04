@@ -54,7 +54,8 @@ class HTMLParser:
   def try_consume_token(self, token):
     checkpoint = self.cursor
     self.skip_whites()
-    result = not self.ended() and self.doc.find(token, self.cursor, self.cursor + len(token)) >= 0
+    result = not self.ended() and \
+      self.doc.find(token, self.cursor, self.cursor + len(token)) >= 0
     if result:
       self.cursor += len(token)
     else:
@@ -138,6 +139,17 @@ class HTMLParser:
 
     return Node(tagName=tag_name, attributeMap=attributes)
 
+  def try_consume_close_tag(self, tag_name):
+    checkpoint = self.cursor
+    result = self.try_consume_token('<') and \
+      self.try_consume_token('/') and \
+      self.try_consume_token(tag_name) and \
+      self.try_consume_token('>')
+
+    if not result:
+      self.cursor = checkpoint
+    return result
+
   def consume_text_node(self):
     self.skip_whites()
     start = self.cursor
@@ -147,7 +159,6 @@ class HTMLParser:
 
     return Node(text=self.doc[start:end].strip())
 
-parser = HTMLParser('       <    @span >')
-node = parser.try_consume_open_tag()
-print(node.tagName)
-print(node.attributeMap)
+parser = HTMLParser('</span>')
+print(parser.try_consume_close_tag('span'))
+print(parser.cursor)
