@@ -48,59 +48,63 @@ class HTMLParser:
 
     return '' if self.ended() else self.doc[start:end]
 
-  def consume_token(self, token):
+  def try_consume_token(self, token):
+    checkpoint = self.cursor
     self.skip_whites()
     result = not self.ended() and self.doc.find(token, self.cursor, self.cursor + len(token)) >= 0
     if result:
       self.cursor += len(token)
+    else:
+      self.cursor = checkpoint
     return bool(result)
 
-  def consume_string(self):
-    if self.consume_token('"'):
-      opener = '"'
-    elif self.consume_token('\''):
-      opener = '\''
+  def try_consume_string(self):
+    checkpoint = self.cursor
+    if self.try_consume_token('"'):
+      limiter = '"'
+    elif self.try_consume_token('\''):
+      limiter = '\''
     else:
+      self.cursor = checkpoint
       return None
 
     start = self.cursor
-    while not self.ended() and self.char() != opener:
-      self.cursor += 1
-    end = self.cursor
+    end = self.doc.find(limiter, start)
 
-    if not self.consume_token(opener):
-      raise ParsingException('Expected closing {}'.format(opener), self)
+    if end < 0:
+      raise ParsingException('Expected closing {}'.format(limiter), self)
+    self.cursor = end + 1
 
     return self.doc[start:end]
 
-  def consume_number(self):
-    start = self.cursor
+  def try_consume_number(self):
+    checkpoint = self.cursor
     try:
       value = float(self.consume_word())
     except:
-      self.cursor = start
+      self.cursor = checkpoint
       return None
 
     return value
 
-  def consume_attribute(self):
-    start = self.cursor
+  def try_consume_attribute(self):
+    checkpoint = self.cursor
     name = self.consume_word()
     if not NAME.match(name):
-      self.cursor = start
+      self.cursor = checkpoint
       return None
 
-    if not self.consume_token('='):
+    if not self.try_consume_token('='):
       value = True
     else:
-      value = self.consume_string() or self.consume_number()
+      value = self.try_consume_string() or self.try_consume_number()
       if not value:
         raise ParsingException('Expected string or number', self)
 
     return (name, value)
 
   def consume_open_tag(self):
-    if not self.consume_token('<'):
+    if not self.try_consume_token('<'):
       return None
 
     self.skip_whites()
@@ -110,8 +114,9 @@ class HTMLParser:
       self.cursor = start
       raise ParsingException('Invalid tag name', self)
 
-    
-parser = HTMLParser(' foo = +-.23 bar >')
-print(parser.consume_attribute())
-print(parser.consume_attribute())
-print(parser.consume_token('>'))
+
+parser = HTMLParser(' foo = " Heyyyyy! What\'s up? " bar number = -23.75 >')
+print(parser.try_consume_attribute())
+print(parser.try_consume_attribute())
+print(parser.try_consume_attribute())
+print(parser.try_consume_token('>'))
