@@ -301,5 +301,6 @@ class HTMLParser:
 
     return nodes
 
+# For testing purposes
 parser = HTMLParser('<img src=\'photo.jpg\' /><span>Hey <p font="helvetica">bro</p>! What\'s up? <img src="hey.gif"/> </span> End of document! ')
 nodes = parser.parse()
