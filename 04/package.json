@@ -4,11 +4,16 @@
   "description": "Solution for exercise 4 in Carlos Zanella's Turing coding challenge",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon index.js",
+    "start": "node index.js"
   },
   "author": "Carlos Zanella",
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2"
+  },
+  "type": "module",
+  "devDependencies": {
+    "nodemon": "^2.0.20"
   }
 }
