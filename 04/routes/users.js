@@ -7,13 +7,19 @@ userRoutes.post('/',
   express.json(),
   (req, res) => {
     const { Id, Name, Email } = req.body;
-    const message = userService.getUser({ Id }) ?
-      `User ID ${Id} updated` :
-      `User ID ${Id} created`;
+    const userExists = Boolean(userService.getUser({ Id }));
 
     userService.addUser({ Id, Name, Email });
 
-    res.json({ message });
+    let status, message;
+    if (userExists) {
+      status = 200;
+      message = `User ID ${Id} updated`;
+    } else {
+      status = 201;
+      message = `User ID ${Id} created`;
+    }
+    res.status(status).json({ message });
   },
 );
 
@@ -27,5 +33,22 @@ userRoutes.get('/:Id',
     } else {
       res.json(user);
     }
+  }
+);
+
+userRoutes.delete('/:Id',
+  (req, res) => {
+    const { Id } = req.params;
+    const userExisted = userService.removeUser({ Id });
+
+    let status, message;
+    if (!userExisted) {
+      status = 404;
+      message = `User ID ${Id} not found`;
+    } else {
+      status = 200;
+      message = `User ID ${Id} successfully removed`;
+    }
+    res.status(status).json({ message });
   }
 );
