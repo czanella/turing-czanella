@@ -16,3 +16,16 @@ userRoutes.post('/',
     res.json({ message });
   },
 );
+
+userRoutes.get('/:Id',
+  (req, res) => {
+    const { Id } = req.params;
+    const user = userService.getUser({ Id });
+
+    if (!user) {
+      res.status(404).json({ message: `User ID ${Id} not found` });
+    } else {
+      res.json(user);
+    }
+  }
+);
