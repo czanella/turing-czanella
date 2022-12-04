@@ -1,7 +1,7 @@
 import re
 
 WHITES = set(' \n\r')
-NAME = re.compile(r'[a-z][a-z0-9]*', re.I)
+NAME = re.compile(r'[a-z][a-z0-9-]*', re.I)
 
 class Node:
   def __init__(self, tagName = None, text = None, children = None, attributeMap = None, parent = None):
@@ -152,13 +152,45 @@ class HTMLParser:
 
   def consume_text_node(self):
     self.skip_whites()
-    start = self.cursor
-    end = self.doc.find('<', start)
-    if self.ended() or end <= start:
+    if self.ended():
       return None
 
+    start = self.cursor
+    end = self.doc.find('<', start)
+    if end <= start:
+      return None
+
+    self.cursor = end
     return Node(text=self.doc[start:end].strip())
 
-parser = HTMLParser('</span>')
-print(parser.try_consume_close_tag('span'))
-print(parser.cursor)
+  def try_consume_node(self):
+    print('Will try to consume node on {}'.format(self.cursor))
+    node = self.try_consume_open_tag()
+    if node is None:
+      return None
+
+    node.children = []
+    while True:
+      # CONTINUAR DAQUI - começar tentando consumir close_tag
+      child_text = self.consume_text_node()
+      if child_text is not None:
+        node.children.append(child_text)
+        print('Consumed text node: |{}|'.format(child_text.text))
+
+      child_node = self.try_consume_node()
+      if child_node is not None:
+        node.children.append(child_node)
+        print('Consumed regular node: |{}|'.format(child_node.tagName))
+
+      if child_text is None and child_node is None:
+        if self.try_consume_close_tag(node.tagName):
+          break
+        else:
+          raise ParsingException('Expected closing tag for {}'.format(node.tagName), self)
+
+    for child in node.children:
+      child.parent = node
+
+    return node
+
+parser = HTMLParser('<span>Hey <p font="helvetica">bro</p>! What\'s up?</span>')
