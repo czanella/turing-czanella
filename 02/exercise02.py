@@ -1,7 +1,7 @@
 import re
 
 WHITES = set(' \n\r')
-NAME = re.compile(r'^[a-z]\w*$', re.I)
+NAME = re.compile(r'[a-z][a-z0-9]*', re.I)
 
 class Node:
   def __init__(self, tagName = None, text = None, children = None, attributeMap = None, parent = None):
@@ -42,11 +42,14 @@ class HTMLParser:
 
   def consume_word(self):
     self.skip_whites()
+    if self.ended():
+      return ''
+
     start = self.cursor
     self.skip_non_whites()
     end = self.cursor
 
-    return '' if self.ended() else self.doc[start:end]
+    return self.doc[start:end]
 
   def try_consume_token(self, token):
     checkpoint = self.cursor
@@ -87,11 +90,22 @@ class HTMLParser:
 
     return value
 
-  def try_consume_attribute(self):
+  def try_consume_name(self):
     checkpoint = self.cursor
-    name = self.consume_word()
-    if not NAME.match(name):
+    self.skip_whites()
+    start = self.cursor
+    token = self.consume_word()
+    match = NAME.match(token)
+    if match and match.start() == 0:
+      self.cursor = start + match.end()
+      return token[:match.end()]
+    else:
       self.cursor = checkpoint
+      return None
+
+  def try_consume_attribute(self):
+    name = self.try_consume_name()
+    if name is None:
       return None
 
     if not self.try_consume_token('='):
@@ -103,20 +117,37 @@ class HTMLParser:
 
     return (name, value)
 
-  def consume_open_tag(self):
+  def try_consume_open_tag(self):
     if not self.try_consume_token('<'):
       return None
 
     self.skip_whites()
-    start = self.cursor
-    name = self.consume_word()
-    if not NAME.match(name):
-      self.cursor = start
+    tag_name = self.try_consume_name()
+    if tag_name == None:
       raise ParsingException('Invalid tag name', self)
 
+    attributes = {}
+    attribute = self.try_consume_attribute()
+    while attribute is not None:
+      name, value = attribute
+      attributes[name] = value
+      attribute = self.try_consume_attribute()
 
-parser = HTMLParser(' foo = " Heyyyyy! What\'s up? " bar number = -23.75 >')
-print(parser.try_consume_attribute())
-print(parser.try_consume_attribute())
-print(parser.try_consume_attribute())
-print(parser.try_consume_token('>'))
+    if not self.try_consume_token('>'):
+      raise ParsingException('> expected', self)
+
+    return Node(tagName=tag_name, attributeMap=attributes)
+
+  def consume_text_node(self):
+    self.skip_whites()
+    start = self.cursor
+    end = self.doc.find('<', start)
+    if self.ended() or end <= start:
+      return None
+
+    return Node(text=self.doc[start:end].strip())
+
+parser = HTMLParser('       <    @span >')
+node = parser.try_consume_open_tag()
+print(node.tagName)
+print(node.attributeMap)
