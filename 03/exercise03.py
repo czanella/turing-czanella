@@ -2,7 +2,7 @@ def combinations(n):
   indexes = [0] * n
 
   while True:
-    yield indexes
+    yield tuple(indexes)
     i = 0
     while i < n and indexes[i] == 1:
       indexes[i] = 0
@@ -55,7 +55,9 @@ if __name__ == '__main__':
   }, 'Should generate all subsets of integers'
 
   for n in range(1, 21):
-    assert len(list(subsets_of_integers(range(n)))) == 2 ** n, 'Should generate all 2^n combinations'
+    assert len(
+      list(subsets_of_integers(range(n))),
+    ) == 2 ** n, 'Should generate all 2^n subsets of integers'
 
   print('All assertions succeeded')
 
