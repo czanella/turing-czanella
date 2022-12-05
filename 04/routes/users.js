@@ -1,10 +1,13 @@
 import * as userService from '../services/users.js';
 import express from 'express';
+import { validationSchema } from '../middlewares/index.js';
+import { createUserSchema } from '../schemas/users/index.js';
 
 export const userRoutes = express();
 
 userRoutes.post('/',
   express.json(),
+  validationSchema('body', createUserSchema),
   (req, res) => {
     const { Id, Name, Email } = req.body;
     const userExists = Boolean(userService.getUser({ Id }));
