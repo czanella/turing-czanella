@@ -4,7 +4,7 @@ export const validationSchema = (reqField, schema) => (req, res, next) => {
   if (error) {
     res.status(400).json({ errors: error.details.map(d => d.message) });
   } else {
-    req.body = value;
+    req[reqField] = value;
     next();
   }
 }

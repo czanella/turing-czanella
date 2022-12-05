@@ -1,7 +1,7 @@
 import * as userService from '../services/users.js';
 import express from 'express';
 import { validationSchema } from '../middlewares/index.js';
-import { createUserSchema } from '../schemas/users/index.js';
+import { createUserSchema, userEntitySchema } from '../schemas/users/index.js';
 
 export const userRoutes = express();
 
@@ -44,6 +44,7 @@ userRoutes.get('/query',
 );
 
 userRoutes.get('/:Id',
+  validationSchema('params', userEntitySchema),
   (req, res) => {
     const { Id } = req.params;
     const user = userService.getUser({ Id });
@@ -57,6 +58,7 @@ userRoutes.get('/:Id',
 );
 
 userRoutes.delete('/:Id',
+  validationSchema('params', userEntitySchema),
   (req, res) => {
     const { Id } = req.params;
     const userExisted = userService.removeUser({ Id });
