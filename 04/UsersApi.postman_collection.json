@@ -1,0 +1,126 @@
+{
+	"info": {
+		"_postman_id": "1844d8d3-5acb-4df7-92ab-8bcf68f4412b",
+		"name": "Carlos Zanella's Turing Test",
+		"description": "This collections can be used to test the API created in exercise 04 of Carlos Zanella's Turing Code CHallenge.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"Id\": \"12345678\",\n    \"Name\": \"Carlos Zanella\",\n    \"Email\": \"carlos@carloszanella.com\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/users",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users"
+					]
+				},
+				"description": "Creates a new user.\n\nRequest must be a POST with a JSON body, following this schema:\n```\n{\n    Id: string - value that identifies the user\n    Name: string - user's name\n    Email: string - user's email\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get User",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users/:Id",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						":Id"
+					],
+					"variable": [
+						{
+							"key": "Id",
+							"value": "12345678",
+							"description": "The user ID to be queried"
+						}
+					]
+				},
+				"description": "Retrieves an user.\n\n----\n\nURL parameters:\n\n`:Id` - the ID of the user to be retrieved\n\n----\n\nResponse:\nAn user object (if the user ID exists in the database) or 404 (if the user ID could not be found)."
+			},
+			"response": []
+		},
+		{
+			"name": "Query Users",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users/query",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						"query"
+					],
+					"query": [
+						{
+							"key": "Name",
+							"value": "Wakka wakka",
+							"disabled": true
+						},
+						{
+							"key": "Email",
+							"value": "carlos@carloszanella.com",
+							"disabled": true
+						}
+					]
+				},
+				"description": "Searches for users.\n\n----\n\nURL search query parameters:\n\n`Name` - queries users with a matching name\n\n`Email` - queries for users with a matching email\n\nIf both parameters are supplied, any user that matches at least one of the values is returned.\n\n----\n\nResponse:\nAn object with an `users` keys, which has a list with all the User objects found."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete User",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users/:Id",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						":Id"
+					],
+					"variable": [
+						{
+							"description": "The user ID to be queried",
+							"key": "Id",
+							"value": "12345678"
+						}
+					]
+				},
+				"description": "Removes an user.\n\n----\n\nURL parameters:\n\n`:Id` - the ID of the user to be removed\n\n----\n\nResponse:\nResponse: An object with a human-readable message informing if the user has been removed or not."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": "localhost:3000"
+		}
+	]
+}
