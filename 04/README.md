@@ -37,3 +37,5 @@ PORT=2345 npm start
 ## 4. Testing through Postman
 
 The project includes a [Postman](https://www.postman.com/) collection that describes each of the API endpoints and can be used to test them. It's located in `04/UsersApi.postman_collection.json`.
+
+The collection is setup to perform requests to `http://localhost:3000`. This can be changed by altering the `host` variable (https://learning.postman.com/docs/sending-requests/variables/).
