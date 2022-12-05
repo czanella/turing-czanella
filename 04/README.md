@@ -29,7 +29,7 @@ The application server can be started by running:
 ```
 npm start
 ```
-By default, the application listens to requests made to port `3000` (e.g.: `http://localhost:3000/users`). The port can be changed through the `PORT` environment table. E.g.: In Linux:
+By default, the application listens to requests made to port `3000` (e.g.: `http://localhost:3000/users`). This can be changed through the `PORT` environment variable. E.g.: In Linux:
 ```
 PORT=2345 npm start
 ```
