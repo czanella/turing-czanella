@@ -1,7 +1,11 @@
 import * as userService from '../services/users.js';
 import express from 'express';
 import { validationSchema } from '../middlewares/index.js';
-import { createUserSchema, userEntitySchema } from '../schemas/users/index.js';
+import {
+  createUserSchema,
+  userEntitySchema,
+  queryUsersSchema,
+} from '../schemas/users/index.js';
 
 export const userRoutes = express();
 
@@ -27,6 +31,7 @@ userRoutes.post('/',
 );
 
 userRoutes.get('/query',
+validationSchema('query', queryUsersSchema),
   (req, res) => {
     const { Name, Email } = req.query;
 
