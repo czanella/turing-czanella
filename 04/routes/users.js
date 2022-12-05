@@ -23,6 +23,23 @@ userRoutes.post('/',
   },
 );
 
+userRoutes.get('/query',
+  (req, res) => {
+    const { Name, Email } = req.query;
+
+    const users = userService.queryUsers({ Name, Email });
+
+    let status;
+    if (users.length === 0) {
+      status = 404;
+    } else {
+      status = 200;
+    }
+
+    res.status(status).json({ users });
+  }
+);
+
 userRoutes.get('/:Id',
   (req, res) => {
     const { Id } = req.params;

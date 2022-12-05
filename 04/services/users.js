@@ -14,9 +14,13 @@ export const removeUser = ({ Id }) => {
 
 export const getUser = ({ Id }) => users[Id] ?? null;
 
-export const queryUser = ({ Name, Email }) =>
-  Object.values(users)
+export const queryUsers = ({ Name, Email }) => {
+  const cleanName = Name?.toLowerCase() ?? null;
+  const cleanEmail = Email?.toLowerCase() ?? null;
+
+  return Object.values(users)
     .filter(user =>
-      (!Name || user.Name === Name) &&
-      (!Email || user.Email === email)
+      (Name && user.Name.toLowerCase() === cleanName) ||
+      (Email && user.Email.toLowerCase() === cleanEmail)
     );
+}
